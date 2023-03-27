@@ -1,0 +1,11 @@
+# Splitwise Setup Codes
+splitwise:
+  consumer_key: '8LbJU3xKBdSz5O6GKlz2OAwTMgIkJIRO3sGzJ1kG'
+  consumer_secret: 'wYjZ0AFOV88aJqglyLqZRsSb5afWEcfHJ2HOK5f6'
+
+# YNAB Setup Codes
+ynab:
+  client_id: 'J980wCxLqUei_9mLQi5TRrUlvE8_AdQVPw2d2ybMKis'
+  client_secret: 'NRcFr3fRgEDNjvvwIBfGkRlXL3o_l-7seWM6m7ORCCM'
+  budget_id: '29868c31-b3f0-4e03-8d8f-e3da8bda16c3' # ID of the YNAB Budget
+  account_id: '45df6016-0a4f-43ea-8b87-f2ad63b817ef' # ID of the YNAB account where Splitwise transactions will be added

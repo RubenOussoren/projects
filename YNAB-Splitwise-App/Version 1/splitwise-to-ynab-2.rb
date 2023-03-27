@@ -34,7 +34,7 @@ else
   access_token = request_token.get_access_token(oauth_verifier: verifier)
 
   # Save access token for future use
-  access_token_data = access_token.to_hash(true)
+  access_token_data = access_token.to_s
   File.write('splitwise_access_token.yml', access_token_data.to_yaml)
 end
 
@@ -66,7 +66,6 @@ puts "Redirect URI: #{redirect_uri}"
 client = OAuth2::Client.new(client_id, client_secret, site: YNAB_API_ENDPOINT)
 
 # Check if an access token has already been saved
-# Check if an access token has already been saved
 if File.exist?('access_token.yml')
   # Load the access token from the saved YAML file
   access_token = OAuth2::AccessToken.from_hash(client, YAML.load_file('access_token.yml'))
@@ -75,26 +74,16 @@ else
   authorize_url = client.auth_code.authorize_url(redirect_uri: redirect_uri)
   puts "Please visit the following URL and authorize the application: #{authorize_url}"
 
-  # Wait for the user to authorize the application and be redirected back to the redirect URI
-  puts "Waiting for authorization at: #{redirect_uri} ..."
+  puts "After authenticating, you will be redirected to a page with a code. Please enter the code below:"
+  code = gets.chomp
 
-  while true
-    response = Net::HTTP.get_response(URI.parse(redirect_uri))
-    if response.code == '200'
-      code = response.body.split('=')[1]
-      puts "Received code: #{code}"
+  # Exchange the authorization code for an access token
+  access_token = client.auth_code.get_token(code, redirect_uri: redirect_uri)
+  puts "Received access token: #{access_token.token}"
 
-      # Exchange the authorization code for an access token
-      access_token = client.auth_code.get_token(code, redirect_uri: redirect_uri)
-      puts "Received access token: #{access_token.token}"
+  # Save the access token to a YAML file for future use
+  File.write('access_token.yml', access_token.to_hash.to_yaml)
 
-      # Save the access token to a YAML file for future use
-      File.write('access_token.yml', access_token.to_hash.to_yaml)
-      break
-    end
-
-    sleep(1)
-  end
 end
 
 # Use the access token to make API requests
