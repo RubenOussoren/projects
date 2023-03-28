@@ -5,7 +5,7 @@ require 'yaml'
 require 'openssl'
 
 # This tells OpenSSL to allow self-signed certificates
-OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
+#OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
 class YnabAuth
   attr_reader :access_token
@@ -14,6 +14,8 @@ class YnabAuth
     @config = YAML.load_file('config.yml')
     @client_id = @config['ynab']['client_id']
     @client_secret = @config['ynab']['client_secret']
+    @account_id = @config['ynab']['account_id']
+    @budget_id = @config['ynab']['budget_id']
     @redirect_uri = 'https://192.168.12.11/callback'
     @access_token_file = access_token_file
   end
@@ -27,6 +29,7 @@ class YnabAuth
       if File.exist?(@access_token_file)
         # Load the access token from the saved YAML file
         access_token_data = YAML.safe_load(File.read(@access_token_file))
+        @access_token = OAuth2::AccessToken.from_hash(client, access_token_data)
       else
         # If no access token has been saved, start the OAuth2 flow by redirecting to the authorization URL
         authorize_url = client.auth_code.authorize_url(redirect_uri: @redirect_uri)
@@ -48,7 +51,10 @@ class YnabAuth
           # Convert the hash to YAML and remove the custom serialization line
           f.write(access_token_data.to_yaml.sub('--- !ruby/hash:SnakyHash::StringKeyed', ''))
         end
+
+        @access_token = OAuth2::AccessToken.from_hash(client, access_token_data)
       end
+
     rescue OAuth2::Error => e
       puts "Error: Failed to authenticate with YNAB API. #{e.message}"
       puts "Please check that the application is set up correctly and that you have an internet connection."
@@ -58,24 +64,27 @@ class YnabAuth
     end
   end
 
-  # Use the access token to make API requests
-  uri = URI.parse('https://api.youneedabudget.com/v1/budgets')
-  http = Net::HTTP.new(uri.host, uri.port)
-  http.use_ssl = true
-
-  request = Net::HTTP::Get.new(uri.request_uri)
-  request['Authorization'] = "Bearer #{access_token_data['access_token']}"
-
-  response = http.request(request)
-
-  if response.code == '200'
-    @access_token = access_token_data['access_token']
-    budgets = JSON.parse(response.body)['data']['budgets']
-    puts "Authenticated successfully! Here are your budgets:"
-    budgets.each do |budget|
-      puts "- #{budget['name']} (ID: #{budget['id']})"
-    end
-  else
-    puts "Error: Failed to retrieve budgets from YNAB API. Response code: #{response.code}"
+  def api_call_data
+    authorize if @access_token.nil?
+    {
+      access_token: @access_token.token,
+      account_id: @account_id,
+      budget_id: @budget_id
+    }
   end
+
+  def get_budgets
+    api_data = api_call_data
+    response = YNAB::API.new(api_data[:access_token]).budgets.get_budgets
+
+    if response.data.budgets.empty?
+      puts "No budgets found."
+    else
+      puts "Budgets:"
+      response.data.budgets.each do |budget|
+        puts "- #{budget.name} (ID: #{budget.id})"
+      end
+    end
+  end
+
 end

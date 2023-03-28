@@ -10,4 +10,3 @@ gem 'sinatra'
 gem 'omniauth-splitwise'
 gem 'splitwise'
 gem 'uri'
-

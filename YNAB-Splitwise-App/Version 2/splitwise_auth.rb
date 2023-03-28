@@ -32,7 +32,7 @@ class SplitwiseAuth
 
   def get_expenses(since_date = nil)
     uri = URI.parse('https://secure.splitwise.com/api/v3.0/get_expenses')
-    uri.query = "updated_since=#{since_date.to_i}" if since_date
+    uri.query = "updated_since=#{since_date.to_time.to_i}" if since_date
     request = Net::HTTP::Get.new(uri.request_uri)
     @access_token.sign!(request)
     response = Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
