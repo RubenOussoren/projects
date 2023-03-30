@@ -1,4 +1,196 @@
 ---
+- id: 2265780644
+  group_id: 45565266
+  friendship_id: 
+  expense_bundle_id: 
+  description: Test bla bla
+  repeats: false
+  repeat_interval: 
+  email_reminder: false
+  email_reminder_in_advance: -1
+  next_repeat: 
+  details: 
+  comments_count: 0
+  payment: false
+  creation_method: 
+  transaction_method: offline
+  transaction_confirmed: false
+  transaction_id: 
+  transaction_status: 
+  cost: '200.0'
+  currency_code: CAD
+  repayments:
+  - from: 66615093
+    to: 29031855
+    amount: '100.0'
+  date: '2023-03-30T00:30:44Z'
+  created_at: '2023-03-30T00:30:57Z'
+  created_by:
+    id: 29031855
+    first_name: Ruben
+    last_name: Oussoren
+    picture:
+      medium: https://splitwise.s3.amazonaws.com/uploads/user/avatar/29031855/medium_27c4d457-0ad9-4f03-9c8d-fd7405d634aa.jpeg
+    custom_picture: true
+  updated_at: '2023-03-30T00:30:57Z'
+  updated_by: 
+  deleted_at: 
+  deleted_by: 
+  category:
+    id: 18
+    name: General
+  receipt:
+    large: 
+    original: 
+  users:
+  - user:
+      id: 66615093
+      first_name: Ruben
+      last_name: Apple
+      picture:
+        medium: https://s3.amazonaws.com/splitwise/uploads/user/default_avatars/avatar-ruby20-100px.png
+    user_id: 66615093
+    paid_share: '0.0'
+    owed_share: '100.0'
+    net_balance: "-100.0"
+  - user:
+      id: 29031855
+      first_name: Ruben
+      last_name: Oussoren
+      picture:
+        medium: https://splitwise.s3.amazonaws.com/uploads/user/avatar/29031855/medium_27c4d457-0ad9-4f03-9c8d-fd7405d634aa.jpeg
+    user_id: 29031855
+    paid_share: '200.0'
+    owed_share: '100.0'
+    net_balance: '100.0'
+- id: 2262565074
+  group_id: 45565266
+  friendship_id: 
+  expense_bundle_id: 
+  description: 'Electricity '
+  repeats: false
+  repeat_interval: 
+  email_reminder: false
+  email_reminder_in_advance: -1
+  next_repeat: 
+  details: 
+  comments_count: 0
+  payment: false
+  creation_method: 
+  transaction_method: offline
+  transaction_confirmed: false
+  transaction_id: 
+  transaction_status: 
+  cost: '100.0'
+  currency_code: CAD
+  repayments:
+  - from: 29031855
+    to: 66615093
+    amount: '50.0'
+  date: '2023-03-28T04:08:17Z'
+  created_at: '2023-03-28T04:08:39Z'
+  created_by:
+    id: 29031855
+    first_name: Ruben
+    last_name: Oussoren
+    picture:
+      medium: https://splitwise.s3.amazonaws.com/uploads/user/avatar/29031855/medium_27c4d457-0ad9-4f03-9c8d-fd7405d634aa.jpeg
+    custom_picture: true
+  updated_at: '2023-03-28T04:08:39Z'
+  updated_by: 
+  deleted_at: 
+  deleted_by: 
+  category:
+    id: 5
+    name: Electricity
+  receipt:
+    large: 
+    original: 
+  users:
+  - user:
+      id: 29031855
+      first_name: Ruben
+      last_name: Oussoren
+      picture:
+        medium: https://splitwise.s3.amazonaws.com/uploads/user/avatar/29031855/medium_27c4d457-0ad9-4f03-9c8d-fd7405d634aa.jpeg
+    user_id: 29031855
+    paid_share: '0.0'
+    owed_share: '50.0'
+    net_balance: "-50.0"
+  - user:
+      id: 66615093
+      first_name: Ruben
+      last_name: Apple
+      picture:
+        medium: https://s3.amazonaws.com/splitwise/uploads/user/default_avatars/avatar-ruby20-100px.png
+    user_id: 66615093
+    paid_share: '100.0'
+    owed_share: '50.0'
+    net_balance: '50.0'
+- id: 2262492066
+  group_id: 45565266
+  friendship_id: 
+  expense_bundle_id: 
+  description: Internet
+  repeats: false
+  repeat_interval: 
+  email_reminder: false
+  email_reminder_in_advance: -1
+  next_repeat: 
+  details: 
+  comments_count: 0
+  payment: false
+  creation_method: 
+  transaction_method: offline
+  transaction_confirmed: false
+  transaction_id: 
+  transaction_status: 
+  cost: '10.0'
+  currency_code: CAD
+  repayments:
+  - from: 29031855
+    to: 66615093
+    amount: '10.0'
+  date: '2023-03-28T02:46:46Z'
+  created_at: '2023-03-28T02:47:05Z'
+  created_by:
+    id: 29031855
+    first_name: Ruben
+    last_name: Oussoren
+    picture:
+      medium: https://splitwise.s3.amazonaws.com/uploads/user/avatar/29031855/medium_27c4d457-0ad9-4f03-9c8d-fd7405d634aa.jpeg
+    custom_picture: true
+  updated_at: '2023-03-28T02:47:05Z'
+  updated_by: 
+  deleted_at: 
+  deleted_by: 
+  category:
+    id: 8
+    name: TV/Phone/Internet
+  receipt:
+    large: 
+    original: 
+  users:
+  - user:
+      id: 66615093
+      first_name: Ruben
+      last_name: Apple
+      picture:
+        medium: https://s3.amazonaws.com/splitwise/uploads/user/default_avatars/avatar-ruby20-100px.png
+    user_id: 66615093
+    paid_share: '10.0'
+    owed_share: '0.0'
+    net_balance: '10.0'
+  - user:
+      id: 29031855
+      first_name: Ruben
+      last_name: Oussoren
+      picture:
+        medium: https://splitwise.s3.amazonaws.com/uploads/user/avatar/29031855/medium_27c4d457-0ad9-4f03-9c8d-fd7405d634aa.jpeg
+    user_id: 29031855
+    paid_share: '0.0'
+    owed_share: '10.0'
+    net_balance: "-10.0"
 - id: 2262479453
   group_id: 45565266
   friendship_id: 
