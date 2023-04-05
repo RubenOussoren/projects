@@ -1,6 +1,7 @@
 require 'splitwise'
 require 'ynab'
 require 'yaml'
+require 'digest/md5'
 
 require_relative 'splitwise_auth'
 require_relative 'ynab_auth'
@@ -35,15 +36,25 @@ rescue StandardError => e
 end
 
 def import_expenses_into_ynab(ynab_client, budget_id, transactions, category_map, settings, api_call_data)
-  new_transactions_data = transactions.map do |expense|
+  new_transactions = []
+  update_transactions = []
+
+  transactions.each do |transaction_data|
+    expense = transaction_data[:expense]
+    is_deleted = transaction_data[:is_deleted]
+
     if expense.is_a?(Hash)
-      expense
+      if expense.key?(:id) && !expense[:id].nil?
+        update_transactions << expense
+      else
+        new_transactions << expense
+      end
     else
       amount = (expense.amount.to_f * 1000).round(0)
       category_id = get_category_id(expense.category, category_map, settings['settings']['ynab_default_category_id'])
       memo = "#{expense.description} (Total: $#{expense.total})"
 
-      {
+      new_transaction = {
         account_id: api_call_data[:account_id],
         date: expense.date.to_s,
         amount: amount,
@@ -51,95 +62,123 @@ def import_expenses_into_ynab(ynab_client, budget_id, transactions, category_map
         category_id: category_id,
         memo: memo,
         cleared: 'cleared',
-        import_id: expense.id.to_s
+        import_id: generate_import_id(expense, is_deleted)
       }
+
+      new_transactions << new_transaction
     end
   end
 
-  transactions_api = YNAB::TransactionsApi.new
-  bulk_transactions = YNAB::BulkTransactions.new(transactions: new_transactions_data)
-  transactions_created = transactions_api.create_transaction(budget_id, bulk_transactions).data
-
-  successful_transactions = []
-  failed_transactions = []
-
-  transactions_created.transactions.each do |transaction|
-    ynab_transaction = transactions_api.get_transaction_by_id(budget_id, transaction.id).data.transaction
-    if ynab_transaction
-      successful_transactions << transaction.id
-    else
-      failed_transactions << transaction.id
+  if new_transactions.any?
+    transaction_service = YNAB::TransactionsApi.new
+    new_transactions.each do |new_transaction|
+      transaction_service.create_transaction(budget_id, {transaction: new_transaction})
     end
+    puts "Imported #{new_transactions.size} new transactions."
   end
 
-  unless successful_transactions.empty?
-    puts "#{successful_transactions.size} transactions have been imported into YNAB."
-    successful_transactions.each { |transaction_id| puts "Transaction #{transaction_id} has been imported into YNAB." }
-  end
-
-  unless failed_transactions.empty?
-    puts "Failed to import transactions into YNAB:"
-    failed_transactions.each { |transaction_id| puts "- Transaction #{transaction_id} failed to import" }
+  if update_transactions.any?
+    update_transactions.each do |transaction|
+      transaction_service = YNAB::TransactionsApi.new
+      transaction_service.update_transaction(budget_id, transaction[:id], {transaction: transaction})
+    end
+    puts "Updated #{update_transactions.size} transactions."
   end
 rescue StandardError => e
-  puts "Failed to import transactions into YNAB: #{e.message}"
+  puts "Failed to import/update transactions in YNAB: #{e.message}"
 end
 
-def sync_transactions(splitwise_expenses, ynab_transactions, ynab_client, budget_id, account_id, category_map, default_category_id, api_call_data, settings)
-  # Normalize Splitwise expenses and create a hash
+def create_splitwise_transactions_hash(splitwise_expenses)
   splitwise_transactions_hash = {}
+
   splitwise_expenses.each do |expense|
     next unless expense.amount.to_f != 0
 
     key = [
       expense.date.to_s,
-      expense.description&.downcase&.strip,
+      "#{expense.description} (Total: $#{expense.total})".downcase.strip,
       (expense.amount.to_f * 1000).round(0)
     ]
-
-    splitwise_transactions_hash[key] = expense
+    splitwise_transactions_hash["splitwise_#{expense.id}"] = { key: key, expense: expense }
   end
 
-  # Normalize YNAB transactions and create a hash
+  splitwise_transactions_hash
+end
+
+def create_ynab_transactions_hash(ynab_transactions)
   ynab_transactions_hash = {}
+
   ynab_transactions.each do |transaction|
     key = [
       transaction.date.to_s,
       transaction.memo&.downcase&.strip,
       transaction.amount
     ]
-
-    ynab_transactions_hash[key] = transaction
+    ynab_transactions_hash[transaction.import_id] = { key: key, transaction: transaction }
   end
 
-  # Get the hash keys of missing transactions
-  missing_keys = splitwise_transactions_hash.keys - ynab_transactions_hash.keys
+  ynab_transactions_hash
+end
 
-  if missing_keys.any?
-    puts "Missing transactions in YNAB:"
+def generate_import_id(expense, is_deleted = false, timestamp = Time.now.to_i, check_alternative = false)
+  import_id_prefix = is_deleted ? "deleted_" : ""
+  timestamp_suffix = check_alternative ? "" : "_#{timestamp}"
+  "#{import_id_prefix}splitwise_#{expense.id}#{timestamp_suffix}"
+end
 
-    missing_transactions = missing_keys.map do |key|
-      expense = splitwise_transactions_hash[key]
-      amount = (expense.amount.to_f * 1000).round(0)
-      category_id = get_category_id(expense.category, category_map, default_category_id)
-      memo = "#{expense.description} (Total: $#{expense.total})"
+def sync_transactions(splitwise_expenses, ynab_transactions, ynab_client, budget_id, account_id, category_map, default_category_id, api_call_data, settings)
+  splitwise_transactions_hash = create_splitwise_transactions_hash(splitwise_expenses)
+  ynab_transactions_hash = create_ynab_transactions_hash(ynab_transactions)
 
-      {
-        account_id: api_call_data[:account_id],
-        date: expense.date.to_s,
-        amount: amount,
-        payee_name: expense.payee_name,
-        category_id: category_id,
-        memo: memo,
-        cleared: 'cleared',
-        import_id: expense.id.to_s
-      }
+  missing_or_deleted_transactions = []
+  update_required_transactions = []
+
+  splitwise_transactions_hash.each do |import_id, splitwise_data|
+    expense = splitwise_data[:expense]
+    ynab_data = ynab_transactions_hash[import_id]
+
+    if ynab_data
+      # Matched by import_id
+      ynab_transaction = ynab_data[:transaction]
+    else
+      # No match by import_id, perform legacy comparison
+      ynab_key_match = ynab_transactions_hash.values.find { |data| data[:key] == splitwise_data[:key] }
+      ynab_transaction = ynab_key_match ? ynab_key_match[:transaction] : nil
     end
 
-    # Call the import_transactions_to_ynab method to import the missing transactions
-    import_expenses_into_ynab(ynab_client, budget_id, missing_transactions, category_map, settings, api_call_data)
+    if ynab_transaction
+      if ynab_transaction.deleted
+        missing_or_deleted_transactions << { expense: expense, is_deleted: true }
+      else
+        # Check if an update is required for the matched ynab_transaction
+        updated = false
+
+        ynab_amount = (expense.amount.to_f * 1000).round(0)
+        updated ||= ynab_transaction.amount != ynab_amount
+
+        memo = "#{expense.description} (Total: $#{expense.total})"
+        updated ||= ynab_transaction.memo&.downcase&.strip != memo.downcase.strip
+
+        update_required_transactions << expense if updated
+      end
+    else
+      missing_or_deleted_transactions << { expense: expense, is_deleted: false }
+    end
+  end
+
+  # Display the summary of each scenario
+  puts "Missing or deleted transactions found for import: #{missing_or_deleted_transactions.count}"
+  puts "Update required for transactions: #{update_required_transactions.count}"
+
+  # Confirm with the user whether to perform the import
+  puts "\nDo you want to import/update the transactions based on the scenarios above? (y/n)"
+  import_input = gets.chomp.downcase
+
+  if import_input == 'y'
+    transactions_to_import = missing_or_deleted_transactions + update_required_transactions
+    import_expenses_into_ynab(ynab_client, budget_id, transactions_to_import, category_map, settings, api_call_data)
   else
-    puts "All transactions are up to date."
+    puts "No action taken. Exiting program."
   end
 end
 
@@ -152,9 +191,20 @@ last_transaction_date = retrieve_recent_transaction_data(ynab_auth.ynab_api_work
 
 # Retrieve expenses
 splitwise_expenses = splitwise_auth.get_expenses(last_transaction_date)
+ynab_transactions = ynab_auth.ynab_api_working? ? YNAB::API.new(api_call_data[:access_token]).transactions.get_transactions(api_call_data[:budget_id], account_id: api_call_data[:account_id], per_page: 1000).data.transactions : []
 
-# Import new transactions into YNAB first
-import_expenses_into_ynab(ynab_auth.ynab_api_working? ? YNAB::API.new(api_call_data[:access_token]) : nil, api_call_data[:budget_id], splitwise_expenses, category_map, settings, api_call_data)
+# Create YNAB and Splitwise transactions hashes
+ynab_transactions_hash = create_ynab_transactions_hash(ynab_transactions)
+splitwise_transactions_hash = create_splitwise_transactions_hash(splitwise_expenses)
+
+# Filter out transactions that are not missing or deleted from Splitwise expenses
+filtered_expenses = splitwise_transactions_hash.reject do |import_id, splitwise_data|
+  ynab_data = ynab_transactions_hash[import_id]
+  ynab_data || (ynab_key_match = ynab_transactions_hash.values.find { |data| data[:key] == splitwise_data[:key] })
+end
+
+# Import new transactions into YNAB
+import_expenses_into_ynab(ynab_auth.ynab_api_working? ? YNAB::API.new(api_call_data[:access_token]) : nil, api_call_data[:budget_id], filtered_expenses.map { |_, data| {expense: data[:expense], is_deleted: data[:is_deleted]} }, category_map, settings, api_call_data)
 
 begin
   puts "Do you want to perform a sync operation? (y/n)"
@@ -197,6 +247,3 @@ if perform_sync
     puts "An error occurred while syncing transactions: #{e}"
   end
 end
-
-# Import new transactions into YNAB
-import_expenses_into_ynab(ynab_auth.ynab_api_working? ? YNAB::API.new(api_call_data[:access_token]) : nil, api_call_data[:budget_id], splitwise_expenses, category_map, settings, api_call_data)

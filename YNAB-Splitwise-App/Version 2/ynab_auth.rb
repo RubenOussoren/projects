@@ -17,38 +17,48 @@ class YnabAuth
     @redirect_uri = @config['settings']['ynab_redirect_url']
     @access_token_file = access_token_file
     @access_token ||= load_access_token
+    authorize
   end
 
   def authorize
     # Create an OAuth2 client with the client ID and secret
     client = OAuth2::Client.new(@client_id, @client_secret, site: 'https://api.youneedabudget.com')
 
-    if @access_token.nil?
-      # If no access token has been saved, start the OAuth2 flow by redirecting to the authorization URL
-      authorize_url = client.auth_code.authorize_url(redirect_uri: @redirect_uri)
-      puts "Following the URL to authorize the application: #{authorize_url}"
+    if @access_token.nil? || @access_token.expired?
+      if @access_token && @access_token.refresh_token
+        # Use the refresh token to obtain a new access token
+        @access_token = @access_token.refresh!
+        save_access_token(@access_token)
+      else
+        # If no access token has been saved, start the OAuth2 flow by redirecting to the authorization URL
+        authorize_url = client.auth_code.authorize_url(redirect_uri: @redirect_uri)
+        puts "Following the URL to authorize the application: #{authorize_url}"
 
-      puts "Please enter the code below:"
-      code = gets.chomp
+        puts "Please enter the code below:"
+        code = gets.chomp
 
-      begin
-        # Exchange the authorization code for an access token
-        access_token_data = client.auth_code.get_token(code, redirect_uri: @redirect_uri)
-        puts "Received access token: #{access_token_data.token}"
+        begin
+          # Exchange the authorization code for an access token
+          access_token_data = client.auth_code.get_token(code, redirect_uri: @redirect_uri)
+          puts "Received access token: #{access_token_data.token}"
 
-        # Convert access_token_data to a hash and remove the custom serialization line
-        access_token_data = access_token_data.to_hash.except('!ruby/hash:SnakyHash::StringKeyed')
+          # Convert access_token_data to a hash and remove the custom serialization line
+          access_token_data = access_token_data.to_hash.except('!ruby/hash:SnakyHash::StringKeyed')
 
-        # Save the access token to a YAML file for future use
-        File.open(@access_token_file, 'w') do |f|
-          # Convert the hash to YAML and remove the custom serialization line
-          f.write(access_token_data.to_yaml.sub('--- !ruby/hash:SnakyHash::StringKeyed', ''))
+          @access_token = OAuth2::AccessToken.from_hash(client, access_token_data)
+          save_access_token(@access_token)
+        rescue OAuth2::Error, StandardError => e
+          handle_authorization_error(e)
         end
-
-        @access_token = OAuth2::AccessToken.from_hash(client, access_token_data)
-      rescue OAuth2::Error, StandardError => e
-        handle_authorization_error(e)
       end
+    end
+  end
+
+  def save_access_token(access_token)
+    # Save the access token to a YAML file for future use
+    File.open(@access_token_file, 'w') do |f|
+      # Convert the access token to a hash, add the custom serialization line, and convert to YAML
+      f.write(access_token.to_hash.to_yaml.sub('--- !ruby/hash:SnakyHash::StringKeyed', ''))
     end
   end
 
@@ -65,6 +75,10 @@ class YnabAuth
     uri = URI.parse('https://api.youneedabudget.com/v1/user')
     retries = 0
     begin
+      # Call authorize #=> refresh the access token if it doesn't exist or is expired
+      authorize if @access_token.nil? || @access_token.expired?
+
+      # Make a request to YNAB API
       response = make_request(uri)
       response.code == '200'
     rescue Net::HTTPBadGateway, StandardError => e
@@ -79,6 +93,22 @@ class YnabAuth
     end
   end
 
+  def load_access_token
+    if File.exist?(@access_token_file)
+      begin
+        # Load the access token from the saved YAML file
+        access_token_data = YAML.safe_load(File.read(@access_token_file))
+        # Create an OAuth2 client with the client ID and secret
+        client = OAuth2::Client.new(@client_id, @client_secret, site: 'https://api.youneedabudget.com')
+        # Initialize the access token with the OAuth2::Client and the token hash
+        return OAuth2::AccessToken.from_hash(client, access_token_data)
+      rescue StandardError => e
+        puts "Error loading access token: #{e.message}"
+      end
+    end
+    nil
+  end
+
   private
 
   def make_request(uri)
@@ -87,21 +117,5 @@ class YnabAuth
     Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|
       http.request(request)
     end
-  end
-
-  def load_access_token
-    if File.exist?(@access_token_file)
-      # Load the access token from the saved YAML file
-      access_token_data = YAML.safe_load(File.read(@access_token_file))
-      # Create an OAuth2 client with the client ID and secret
-      client = OAuth2::Client.new(@client_id, @client_secret, site: 'https://api.youneedabudget.com')
-      # Initialize the access token with the OAuth2::Client and the token hash
-      OAuth2::AccessToken.from_hash(client, access_token_data)
-    end
-  end
-
-  def handle_authorization_error(e)
-    puts "Error: Failed to authenticate with YNAB API. #{e.message}"
-    puts "Please check that the application is set up correctly and that you have an internet connection."
   end
 end

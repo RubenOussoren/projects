@@ -31,30 +31,33 @@ class SplitwiseAuth
   end
 
   def get_expenses(since_date = nil)
-    uri = URI.parse('https://secure.splitwise.com/api/v3.0/get_expenses')
-    uri.query = "updated_since=#{since_date.to_time.to_i}" if since_date
-    response = make_request(uri)
-    expenses = JSON.parse(response.body)['expenses']
-    expenses.map! do |expense|
-      ruben = expense["users"].find { |u| u["user_id"] == 29031855 }
-      other_users = expense["users"].reject { |u| u["user_id"] == 29031855 }
-      payee_name =
-        if other_users.size == 1
-          other_user = other_users.first
-          "#{other_user['user']['first_name']} #{other_user['user']['last_name']}"
-        else
-          "Group Expense"
+    expenses = []
+    page = 0
+    limit = 500
+
+    loop do
+      page += 1
+      uri = construct_expenses_uri(limit, page, since_date)
+      response = make_request(uri)
+
+      begin
+        expenses_data = JSON.parse(response.body)['expenses']
+        break if expenses_data.empty?
+
+        if since_date
+          expenses_data.select! { |expense| Date.parse(expense['date']) >= since_date }
         end
-      OpenStruct.new(
-        id: expense['id'],
-        date: Date.parse(expense['date']),
-        description: expense['description'],
-        total: expense['cost'],
-        amount: ruben['net_balance'],
-        payee_name: payee_name,
-        category: expense['category']['name']
-      )
+
+        expenses += process_expenses(expenses_data)
+
+        # Break the loop if the fetched expenses_data length is not equal to the limit
+        break if expenses_data.length < limit
+      rescue JSON::ParserError => e
+        puts "Error parsing JSON response: #{e.message}"
+        break
+      end
     end
+
     expenses
   rescue StandardError => e
     puts "Error getting Splitwise expenses: #{e.message}"
@@ -83,6 +86,37 @@ class SplitwiseAuth
   end
 
   private
+
+  def construct_expenses_uri(limit, page, since_date)
+    uri = URI.parse('https://secure.splitwise.com/api/v3.0/get_expenses')
+    query_params = { limit: limit, page: page }
+    query_params[:updated_since] = since_date.to_time.to_i if since_date
+    uri.query = URI.encode_www_form(query_params)
+    uri
+  end
+
+  def process_expenses(expenses_data)
+    expenses_data.map do |expense|
+      ruben = expense["users"].find { |u| u["user_id"] == 29031855 }
+      other_users = expense["users"].reject { |u| u["user_id"] == 29031855 }
+      payee_name =
+        if other_users.size == 1
+          other_user = other_users.first
+          "#{other_user['user']['first_name']} #{other_user['user']['last_name']}"
+        else
+          "Group Expense"
+        end
+      OpenStruct.new(
+        id: expense['id'],
+        date: Date.parse(expense['date']),
+        description: expense['description'],
+        total: expense['cost'],
+        amount: ruben['net_balance'],
+        payee_name: payee_name,
+        category: expense['category']['name']
+      )
+    end
+  end
 
   def authorize_app
     request_token = @consumer.get_request_token
