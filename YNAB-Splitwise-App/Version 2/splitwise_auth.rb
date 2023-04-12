@@ -30,14 +30,11 @@ class SplitwiseAuth
     end
   end
 
-  def get_expenses(since_date = nil)
+  def get_expenses(since_date = nil, page = 1, per_page = 100)
     expenses = []
-    page = 0
-    limit = 500
 
     loop do
-      page += 1
-      uri = construct_expenses_uri(limit, page, since_date)
+      uri = construct_expenses_uri(per_page, page, since_date)
       response = make_request(uri)
 
       begin
@@ -50,12 +47,14 @@ class SplitwiseAuth
 
         expenses += process_expenses(expenses_data)
 
-        # Break the loop if the fetched expenses_data length is not equal to the limit
-        break if expenses_data.length < limit
+        # Break the loop if the fetched expenses_data length is not equal to the per_page
+        break if expenses_data.length < per_page
       rescue JSON::ParserError => e
         puts "Error parsing JSON response: #{e.message}"
         break
       end
+
+      page += 1
     end
 
     expenses
