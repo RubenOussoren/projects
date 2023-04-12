@@ -158,7 +158,7 @@ def import_initial_transactions_into_ynab(ynab_client, budget_id, filtered_expen
       splitwise_id = created_transaction.import_id[/_(\d+)/, 1]
       mapping[splitwise_id] = {'ynab_id' => created_transaction.id, 'status' => 'active'}
     end
-    puts "Imported #{new_transactions.size} new transactions."
+    puts "Imported #{new_transactions.size} new transaction/s."
     File.write('mapping.json', mapping.to_json)
   else
     puts "There are no new transactions to import :)"
@@ -204,7 +204,7 @@ def import_sync_transactions_into_ynab(ynab_client, budget_id, category_map, set
       payee_name: transaction_data.payee_name,
       category_id: category_id,
       memo: memo,
-      cleared: 'cleared',
+      cleared: 'uncleared',
     }
 
     update_transactions << update_transaction
@@ -217,50 +217,15 @@ def import_sync_transactions_into_ynab(ynab_client, budget_id, category_map, set
     splitwise_id = transaction[:id]
     mapping[splitwise_id] = {'ynab_id' => created_transaction.id, 'status' => 'active'}
   end
-  puts "Recreated #{recreate_transactions.size} transactions."
+  puts "Recreated #{recreate_transactions.size} transaction/s."
 
   update_transactions.each do |transaction|
-    puts "[DEBUG] Updating transaction: #{transaction.inspect}" # Debug line
     transaction_service.update_transaction(budget_id, transaction[:id], {transaction: transaction})
   end
-  puts "Updated #{update_transactions.size} transactions."
+  puts "Updated #{update_transactions.size} transaction/s."
 
 rescue StandardError => e
   puts "Failed to import/update transactions in YNAB: #{e.message}"
-end
-
-def create_splitwise_transactions_hash(splitwise_expenses)
-  splitwise_transactions_hash = {}
-  mapping = load_mapping_file
-
-  splitwise_expenses.each do |expense|
-    next unless expense.amount.to_f != 0
-    next if mapping.key?(expense.id.to_s) && mapping[expense.id.to_s]['status'].eql?('ignored')
-
-    key = [
-      expense.date.to_s,
-      "#{expense.description} (Total: $#{expense.total})".downcase.strip,
-      (expense.amount.to_f * 1000).round(0)
-    ]
-    splitwise_transactions_hash["splitwise_#{expense.id}"] = { key: key, expense: expense }
-  end
-
-  splitwise_transactions_hash
-end
-
-def create_ynab_transactions_hash(ynab_transactions)
-  ynab_transactions_hash = {}
-
-  ynab_transactions.each do |transaction|
-    key = [
-      transaction.date.to_s,
-      transaction.memo&.downcase&.strip,
-      transaction.amount
-    ]
-    ynab_transactions_hash[transaction.import_id] = { key: key, transaction: transaction }
-  end
-
-  ynab_transactions_hash
 end
 
 def generate_import_id(expense, timestamp = Time.now.to_i)
@@ -274,7 +239,7 @@ def sync_transactions(splitwise_expenses, ynab_transactions, ynab_client, budget
   splitwise_expenses.each do |transaction|
     splitwise_id = transaction.id.to_s
     if mapping.key?(splitwise_id)
-      if ['active', 'updated'].include?(mapping[splitwise_id]['status'])
+      if ['active'].include?(mapping[splitwise_id]['status']) # Change to ['active', 'updated'] if you want to include the updated status to show in "Update_Required" transactions
         ynab_id = mapping[splitwise_id]['ynab_id']
         ynab_related_transaction = ynab_transactions.find { |t| t.id == ynab_id }
         ynab_amount = (transaction.amount.to_f * 1000).round(0)
@@ -285,15 +250,16 @@ def sync_transactions(splitwise_expenses, ynab_transactions, ynab_client, budget
 
         update_required_transactions << transaction if updated
       elsif mapping[splitwise_id]['status'] == 'deleted'
-        missing_or_deleted_transactions << transaction
+        if transaction.date <= Date.today
+          missing_or_deleted_transactions << transaction
+        end
       end
     else
-      missing_or_deleted_transactions << transaction
+      if transaction.date <= Date.today
+        missing_or_deleted_transactions << transaction
+      end
     end
   end
-
-  puts "Missing or Deleted Transactions:#{missing_or_deleted_transactions}"
-  puts "Update Transactions:#{update_required_transactions}"
 
   # Handle missing/deleted transactions if any
   if missing_or_deleted_transactions.any?
@@ -312,13 +278,15 @@ def sync_transactions(splitwise_expenses, ynab_transactions, ynab_client, budget
         puts "Exiting program."
         exit
       when 'ignore'
-        missing_or_deleted_transactions.each do |transaction_data|
+        ignored_transactions_number = missing_or_deleted_transactions.size
+        missing_or_deleted_transactions.delete_if do |transaction_data|
           splitwise_id = transaction_data.id.to_s
           mapping[splitwise_id]['status'] = 'ignored'
+          true
         end
         # Save updated mapping
         File.write('mapping.json', mapping.to_json)
-        puts "Ignored #{missing_or_deleted_transactions.size} transactions."
+        puts "Ignored #{ignored_transactions_number} transaction/s."
       when 'all'
         # No need to modify the missing_or_deleted_transactions array (keep all)
       else
