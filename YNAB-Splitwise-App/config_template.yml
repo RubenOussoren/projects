@@ -1,0 +1,16 @@
+# Splitwise Setup Codes
+splitwise:
+  consumer_key: ''
+  consumer_secret: ''
+
+# YNAB Setup Codes
+ynab:
+  client_id: ''
+  client_secret: ''
+  budget_id: ''
+  account_id: ''
+
+# Setting for the App
+settings:
+  ynab_default_category_id: ''
+  ynab_redirect_url: ''
