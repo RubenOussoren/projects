@@ -1,8 +1,17 @@
-"YNAB-Splitwise-App/config.yml"
-"YNAB-Splitwise-App/ynab_access_token.yml"
-"YNAB-Splitwise-App/splitwise_access_token.yml"
+# Splitwise Files to Ignore
 "YNAB-Splitwise-App/category_map.yml"
+"YNAB-Splitwise-App/config.yml"
+"YNAB-Splitwise-App/cron_job.log"
 "YNAB-Splitwise-App/Gemfile.lock"
 "YNAB-Splitwise-App/mapping.json"
 "YNAB-Splitwise-App/redirect_server.rb"
-"*.log"
+"YNAB-Splitwise-App/splitwise_access_token.yml"
+"YNAB-Splitwise-App/ynab_access_token.yml"
+
+# Other Projects to Ignore
+gpt_context/
+Bank-Statement-CSV-Reader/
+
+
+
+
