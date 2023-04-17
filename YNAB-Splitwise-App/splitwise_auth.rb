@@ -8,7 +8,7 @@ require 'uri'
 class SplitwiseAuth
   def initialize(access_token_file = 'splitwise_access_token.yml', consumer_key = nil, consumer_secret = nil)
     @script_directory = File.dirname(File.realdirpath(__FILE__))
-    @config = YAML.load_file(File.join($script_directory,'config.yml')).fetch('splitwise', {})
+    @config = YAML.load_file(File.join(@script_directory,'config.yml')).fetch('splitwise', {})
     @consumer_key = consumer_key || @config.fetch('consumer_key', '')
     @consumer_secret = consumer_secret || @config.fetch('consumer_secret', '')
     @consumer = OAuth::Consumer.new(
