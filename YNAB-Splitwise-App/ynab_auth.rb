@@ -34,10 +34,10 @@ class YnabAuth
       else
         # If no access token has been saved, start the OAuth2 flow by redirecting to the authorization URL
         authorize_url = client.auth_code.authorize_url(redirect_uri: @redirect_uri)
-        #puts "Following the URL to authorize the application: #{authorize_url}"
+        puts "Following the URL to authorize the application: #{authorize_url}"
 
-        puts "Opening the authorization URL in your default browser..."
-        Launchy.open(authorize_url)
+        #puts "Opening the authorization URL in your default browser..."
+        #Launchy.open(authorize_url)
 
         puts "Please enter the code below:"
         code = $stdin.gets.chomp
