@@ -1,0 +1,8 @@
+# Splitwise Setup Codes
+splitwise:
+  consumer_key: ''
+  consumer_secret: ''
+
+# Google Sheets Setup Codes
+spreadsheet_id: ''
+token_path: token.yaml

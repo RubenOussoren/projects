@@ -1,0 +1,12 @@
+source 'https://rubygems.org'
+
+gem 'google-apis-sheets_v4'
+gem 'googleauth'
+gem 'fileutils'
+gem 'yaml'
+gem 'csv'
+gem 'date'
+gem 'splitwise'
+gem 'oauth'
+gem 'json'
+gem 'uri'
