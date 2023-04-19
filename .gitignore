@@ -1,4 +1,4 @@
-# Splitwise Files to Ignore
+# Splitwise/YNAB Files to Ignore
 "YNAB-Splitwise-App/category_map.yml"
 "YNAB-Splitwise-App/config.yml"
 "YNAB-Splitwise-App/cron_job.log"
@@ -8,7 +8,14 @@
 "YNAB-Splitwise-App/splitwise_access_token.yml"
 "YNAB-Splitwise-App/ynab_access_token.yml"
 
+# Bank-Statement Budget Files
+Bank-Statement-CSV-Reader/csv_files/
+Bank-Statement-CSV-Reader/old
+Bank-Statement-CSV-Reader/config.yml
+Bank-Statement-CSV-Reader/credentials.json
+Bank-Statement-CSV-Reader/Gemfile.lock
+Bank-Statement-CSV-Reader/splitwise_access_token.yml
+Bank-Statement-CSV-Reader/token.yaml
+
 # Other Projects to Ignore
 gpt_context/
-Bank-Statement-CSV-Reader/
-Bank-Statement-CSV-Reader/README.md
