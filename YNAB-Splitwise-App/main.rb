@@ -4,32 +4,34 @@ require 'yaml'
 require 'json'
 require 'digest/md5'
 
+# Required authentication files
 require_relative 'splitwise_auth'
 require_relative 'ynab_auth'
 
+# Check if the sync functionality should be skipped and find the script directory
 skip_sync_question = ARGV.include?('-s')
 $script_directory = File.dirname(File.realdirpath(__FILE__))
 
-def get_category_id(keyword, category_map, default_category_id)
-  category_map.detect { |category| category['keywords']&.map(&:downcase)&.include?(keyword.downcase) }&.fetch('id', default_category_id) || default_category_id
-end
-
+# Function to load configuration files
 def load_configs
   settings = YAML.load_file(File.join($script_directory, 'config.yml'))
   category_map = YAML.load_file(File.join($script_directory, 'category_map.yml'))
   [settings, category_map]
 end
 
+# Function to initialize Splitwise API
 def initialize_splitwise
   splitwise_auth = SplitwiseAuth.new
   splitwise_auth.splitwise_api_working? ? splitwise_auth : SplitwiseAuth.new
 end
 
+# Function to initialize YNAB API
 def initialize_ynab
   ynab_auth = YnabAuth.new
   ynab_auth.ynab_api_working? ? ynab_auth : YnabAuth.new
 end
 
+# Function to load the mapping file
 def load_mapping_file(mapping_file = 'mapping.json')
   mapping_path = File.expand_path(mapping_file, $script_directory)
   if File.exist?(mapping_path) # Changed this line
@@ -43,6 +45,7 @@ rescue StandardError => e
   {}
 end
 
+# Function to write the mapping file
 def write_mapping_file(mapping, mapping_file = 'mapping.json')
   mapping_path = File.join($script_directory, mapping_file)
   begin
@@ -52,6 +55,12 @@ def write_mapping_file(mapping, mapping_file = 'mapping.json')
   end
 end
 
+# Function to get the category ID based on the keyword
+def get_category_id(keyword, category_map, default_category_id)
+  category_map.detect { |category| category['keywords']&.map(&:downcase)&.include?(keyword.downcase) }&.fetch('id', default_category_id) || default_category_id
+end
+
+# Function to retrieve recent transaction data from YNAB
 def retrieve_recent_transaction_data(ynab_client, budget_id, account_id)
   ynab_client.transactions.get_transactions(
     budget_id, account_id: account_id, sort_by: 'date', sort_order: 'desc', per_page: 1
@@ -61,6 +70,7 @@ rescue StandardError => e
   nil
 end
 
+# Function to update mapping statuses
 def update_mapping_statuses(mapping, ynab_transactions, splitwise_expenses)
   updated_mapping = mapping.dup
 
@@ -76,7 +86,6 @@ def update_mapping_statuses(mapping, ynab_transactions, splitwise_expenses)
         updated_mapping.delete(splitwise_id) # Scenario 2
       elsif !ynab_match && splitwise_match
         map_data['status'] = 'deleted' # Scenario 3
-      # Scenario 4 and 4.a are handled in the sync_transactions method and don't need to be addressed here
       end
     elsif relationship_status == 'ignored' && !ynab_match && !splitwise_match
       #updated_mapping.delete(splitwise_id)
@@ -85,6 +94,7 @@ def update_mapping_statuses(mapping, ynab_transactions, splitwise_expenses)
   updated_mapping
 end
 
+# Function to filter out initial transactions
 def filter_initial_transactions(splitwise_expenses, mapping)
   splitwise_expenses.reject do |expense|
     splitwise_id = expense.id.to_s
@@ -94,70 +104,62 @@ def filter_initial_transactions(splitwise_expenses, mapping)
   end
 end
 
+# Function to generate initial mapping between Splitwise and YNAB transactions
 def generate_initial_mapping(splitwise_auth, ynab_client, account_id, since_date = nil, api_call_data)
   mapping = {}
   unmatched_transactions = []
 
-  page = 1
-  per_page = 100
+  puts "Fetching Splitwise expenses..."
+  all_splitwise_expenses = splitwise_auth.get_expenses(since_date)
+  puts "Fetched #{all_splitwise_expenses.size} Splitwise expenses."
 
-  loop do
-    previous_mapping_size = mapping.size
+  puts "Fetching YNAB transactions..."
+  all_ynab_transactions = ynab_client.transactions.get_transactions(api_call_data[:budget_id], account_id: account_id, since_date: since_date, per_page: 1000).data.transactions
+  puts "Fetched #{all_ynab_transactions.size} YNAB transactions."
 
-    puts "Fetching Splitwise expenses..."
-    all_splitwise_expenses = splitwise_auth.get_expenses(since_date, page, per_page)
-    puts "Fetched #{all_splitwise_expenses.size} Splitwise expenses."
-    break if all_splitwise_expenses.empty?
+  # Iterate through Splitwise expenses to find matching YNAB transactions
+  all_splitwise_expenses.each do |splitwise_expense|
+    memo = "#{splitwise_expense.description} (Total: $#{splitwise_expense.total})".downcase.strip
+    amount = (splitwise_expense.amount.to_f * 1000).round(0)
 
-    puts "Fetching YNAB transactions..."
-    all_ynab_transactions = ynab_client.transactions.get_transactions(api_call_data[:budget_id], account_id: account_id, since_date: since_date, per_page: per_page).data.transactions
-    puts "Fetched #{all_ynab_transactions.size} YNAB transactions."
-
-    all_splitwise_expenses.each do |splitwise_expense|
-      memo = "#{splitwise_expense.description} (Total: $#{splitwise_expense.total})".downcase.strip
-      amount = (splitwise_expense.amount.to_f * 1000).round(0)
-
-      ynab_transaction = all_ynab_transactions.find do |transaction|
-        transaction.memo&.downcase&.strip == memo &&
-        transaction.amount == amount &&
-        transaction.date.to_s == splitwise_expense.date.to_s
-      end
-
-      if ynab_transaction
-        mapping[splitwise_expense.id.to_s] = { 'ynab_id' => ynab_transaction.id, 'status' => ynab_transaction.deleted ? 'deleted' : 'active' }
-      else
-        unmatched_transactions << splitwise_expense unless unmatched_transactions.include?(splitwise_expense)
-      end
+    # Find the matching YNAB transaction based on memo, amount, and date
+    ynab_transaction = all_ynab_transactions.find do |transaction|
+      transaction.memo&.downcase&.strip == memo &&
+      transaction.amount == amount &&
+      transaction.date.to_s == splitwise_expense.date.to_s
     end
 
-    if mapping.size == previous_mapping_size
-      puts "No new transactions to map. Stopping."
-      break
+    # If a matching YNAB transaction is found, add it to the mapping
+    if ynab_transaction
+      mapping[splitwise_expense.id.to_s] = { 'ynab_id' => ynab_transaction.id, 'status' => ynab_transaction.deleted ? 'deleted' : 'active' }
+    else
+      # If no matching YNAB transaction is found, add the Splitwise expense to unmatched_transactions
+      unmatched_transactions << splitwise_expense unless unmatched_transactions.include?(splitwise_expense)
     end
-
-    # Display progress in the command line
-    puts "Page #{page} processed. Transactions mapped: #{mapping.size}"
-
-    page += 1
   end
 
+  # Display unmatched Splitwise transactions
   puts "Splitwise transactions that could not be matched with YNAB transactions:"
   unmatched_transactions.each { |expense| STDERR.puts "- '#{expense.description}' (ID: #{expense.id})" }
 
+  # Write the mapping to a file and display a message
   write_mapping_file(mapping)
   puts "Mapping of all transactions has finished."
   puts "Run the import again to start importing transactions!"
   exit
 end
 
+# Function to import initial transactions into YNAB
 def import_initial_transactions_into_ynab(ynab_client, budget_id, filtered_expenses, category_map, settings, api_call_data, mapping)
   new_transactions = []
 
+  # Iterate through filtered expenses to create new YNAB transactions
   filtered_expenses.each do |expense|
     amount = (expense.amount.to_f * 1000).round(0)
     category_id = get_category_id(expense.category, category_map, settings['settings']['ynab_default_category_id'])
     memo = "#{expense.description} (Total: $#{expense.total})"
 
+    # Create a new YNAB transaction
     new_transaction = {
       account_id: api_call_data[:account_id],
       date: expense.date.to_s,
@@ -169,9 +171,11 @@ def import_initial_transactions_into_ynab(ynab_client, budget_id, filtered_expen
       import_id: generate_import_id(expense)
     }
 
+    # Add the new transaction to the new_transactions array
     new_transactions << new_transaction
   end
 
+  # If there are new transactions, create them in YNAB and update the mapping
   if new_transactions.any?
     transaction_service = YNAB::TransactionsApi.new
     new_transactions.each do |new_transaction|
@@ -189,10 +193,12 @@ rescue StandardError => e
   puts "Failed to import/update transactions in YNAB: #{e.message}"
 end
 
+# Function to import and update transactions in YNAB
 def import_sync_transactions_into_ynab(ynab_client, budget_id, category_map, settings, api_call_data, mapping, missing_or_deleted_transactions, update_required_transactions)
   recreate_transactions = []
   update_transactions = []
 
+  # Process missing or deleted transactions
   missing_or_deleted_transactions.each do |transaction_data|
     amount = (transaction_data.amount.to_f * 1000).round(0)
     category_id = get_category_id(transaction_data.category, category_map, settings['settings']['ynab_default_category_id'])
@@ -212,6 +218,7 @@ def import_sync_transactions_into_ynab(ynab_client, budget_id, category_map, set
     recreate_transactions << recreate_transaction
   end
 
+  # Process update required transactions
   update_required_transactions.each do |transaction_data|
     ynab_id = mapping[transaction_data.id.to_s]['ynab_id']
     amount = (transaction_data.amount.to_f * 1000).round(0)
@@ -232,6 +239,7 @@ def import_sync_transactions_into_ynab(ynab_client, budget_id, category_map, set
     update_transactions << update_transaction
   end
 
+  # Call YNAB API to create or update transactions
   transaction_service = YNAB::TransactionsApi.new
   recreate_transactions.each do |transaction|
     ynab_response = transaction_service.create_transaction(budget_id, {transaction: transaction})
@@ -250,10 +258,12 @@ rescue StandardError => e
   puts "Failed to import/update transactions in YNAB: #{e.message}"
 end
 
+# Function to generate an import ID for a given expense and timestamp
 def generate_import_id(expense, timestamp = Time.now.to_i)
   "#{timestamp}_splitwise_#{expense.id}"
 end
 
+# Function to handle the synchronization of transactions between Splitwise and YNAB
 def sync_transactions(splitwise_expenses, ynab_transactions, ynab_client, budget_id, account_id, category_map, default_category_id, api_call_data, settings, mapping)
   missing_or_deleted_transactions = []
   update_required_transactions = []
@@ -300,13 +310,17 @@ def sync_transactions(splitwise_expenses, ynab_transactions, ynab_client, budget
         puts "Exiting program."
         exit
       when 'ignore'
-        ignored_transactions_number = missing_or_deleted_transactions.size
+        ignored_transactions_number = 0
         missing_or_deleted_transactions.delete_if do |transaction_data|
           splitwise_id = transaction_data.id.to_s
-          mapping[splitwise_id]['status'] = 'ignored'
+          if mapping[splitwise_id]
+            mapping[splitwise_id]['status'] = 'ignored'
+          else
+            mapping[splitwise_id] = { 'status' => 'ignored' }
+          end
+          ignored_transactions_number += 1
           true
         end
-        # Save updated mapping
         write_mapping_file(mapping)
         puts "Ignored #{ignored_transactions_number} transaction/s."
       when 'all'
@@ -348,6 +362,7 @@ def sync_transactions(splitwise_expenses, ynab_transactions, ynab_client, budget
 
   transactions_to_import = missing_or_deleted_transactions + update_required_transactions
 
+   # Import and update transactions in YNAB
   if transactions_to_import.any?
     mapping = load_mapping_file
     import_sync_transactions_into_ynab(ynab_client, budget_id, category_map, settings, api_call_data, mapping, missing_or_deleted_transactions, update_required_transactions)
@@ -358,25 +373,31 @@ def sync_transactions(splitwise_expenses, ynab_transactions, ynab_client, budget
       mapping[splitwise_id]['status'] = 'updated'
     end
 
-    # Save updated mapping
     write_mapping_file(mapping)
   else
     puts "All transactions are up to date and synced :)"
   end
 end
 
+# Load settings and category maps
 settings, category_map = load_configs
+
+# Initialize Splitwise and YNAB
 splitwise_auth = initialize_splitwise
 ynab_auth = initialize_ynab
 api_call_data = ynab_auth.api_call_data
 
+# Retrieve recent transaction data
 last_transaction_date = retrieve_recent_transaction_data(ynab_auth.ynab_api_working? ? YNAB::API.new(api_call_data[:access_token]) : nil, api_call_data[:budget_id], api_call_data[:account_id])
+if last_transaction_date == Date.today
+  last_transaction_date -= 1
+end
 
-# Retrieve expenses
+# Retrieve expenses and transactions
 splitwise_expenses = splitwise_auth.get_expenses(last_transaction_date)
 ynab_transactions = ynab_auth.ynab_api_working? ? YNAB::API.new(api_call_data[:access_token]).transactions.get_transactions(api_call_data[:budget_id], account_id: api_call_data[:account_id], since_date: last_transaction_date, per_page: 1000).data.transactions : []
 
-# Load mapping and update transaction statuses
+# Update mapping statuses and save updated mapping
 mapping = load_mapping_file
 mapping = update_mapping_statuses(mapping, ynab_transactions, splitwise_expenses)
 write_mapping_file(mapping)
@@ -395,12 +416,12 @@ end
 # Filter out transactions that are not missing or deleted from Splitwise expenses
 filtered_initial_transactions = filter_initial_transactions(splitwise_expenses, mapping)
 
-# Initial import of new transactions into YNAB
+# Import initial transactions into YNAB and save updated mapping
 import_initial_transactions_into_ynab(ynab_auth.ynab_api_working? ? YNAB::API.new(api_call_data[:access_token]) : nil, api_call_data[:budget_id], filtered_initial_transactions, category_map, settings, api_call_data, mapping)
 
-# Save updated mapping
 write_mapping_file(mapping)
 
+# Prompt user to perform a sync operation and synchronize transactions if the user chooses to do so and if `-s` is not entered during run
 if skip_sync_question
   puts "Sync transactions functionality has been skipped by run-command"
 else
@@ -421,7 +442,6 @@ else
   begin
     puts "Enter the start date for transaction comparison (YYYY-MM-DD):"
     start_date = Date.parse($stdin.gets.chomp)
-    raise ArgumentError, "The earliest date that can be entered is 2023-03-30" if start_date < Date.parse("2023-01-01")
   rescue ArgumentError => e
     puts e.message
     retry
@@ -432,7 +452,7 @@ if perform_sync
   begin
     ynab_client = YNAB::API.new(api_call_data[:access_token])
     # Retrieve expenses and transactions
-    splitwise_expenses = splitwise_auth.get_expenses(last_transaction_date)
+    splitwise_expenses = splitwise_auth.get_expenses(start_date)
     ynab_transactions = ynab_client.transactions.get_transactions(
       api_call_data[:budget_id],
       account_id: api_call_data[:account_id],

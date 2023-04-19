@@ -31,37 +31,31 @@ class SplitwiseAuth
     end
   end
 
-  def get_expenses(since_date = nil, page = 1, per_page = 100)
+  def get_expenses(since_date = nil, end_date = Date.today, page = 1, per_page = 1000)
     expenses = []
+    more_expenses = true
+    previous_expense_ids = nil
 
-    loop do
-      uri = construct_expenses_uri(per_page, page, since_date)
+    while more_expenses
+      uri = construct_expenses_uri(per_page, page, since_date, end_date)
       response = make_request(uri)
 
-      begin
-        expenses_data = JSON.parse(response.body)['expenses']
-        break if expenses_data.empty?
+      expenses_data = JSON.parse(response.body)['expenses']
+      current_expense_ids = expenses_data.map { |expense| expense['id'] }
 
-        if since_date
-          expenses_data.select! { |expense| Date.parse(expense['date']) >= since_date }
-        end
-
+      if expenses_data.empty?
+        more_expenses = false
+      elsif previous_expense_ids == current_expense_ids
+        more_expenses = false
+      else
         expenses += process_expenses(expenses_data)
-
-        # Break the loop if the fetched expenses_data length is not equal to the per_page
-        break if expenses_data.length < per_page
-      rescue JSON::ParserError => e
-        puts "Error parsing JSON response: #{e.message}"
-        break
+        more_expenses = expenses_data.length == per_page
       end
 
+      previous_expense_ids = current_expense_ids
       page += 1
     end
-
     expenses
-  rescue StandardError => e
-    puts "Error getting Splitwise expenses: #{e.message}"
-    []
   end
 
   def splitwise_api_working?
@@ -87,10 +81,11 @@ class SplitwiseAuth
 
   private
 
-  def construct_expenses_uri(limit, page, since_date)
+  def construct_expenses_uri(limit, page, since_date, end_date = Date.today)
     uri = URI.parse('https://secure.splitwise.com/api/v3.0/get_expenses')
     query_params = { limit: limit, page: page }
-    query_params[:updated_since] = since_date.to_time.to_i if since_date
+    query_params[:dated_after] = since_date.to_s if since_date
+    query_params[:dated_before] = end_date.to_s if end_date
     uri.query = URI.encode_www_form(query_params)
     uri
   end
