@@ -5,8 +5,8 @@ require_relative 'google_sheets_manager'
 
 def main
   # Collect user input for CSV filenames
-  credit_transactions_csv = input_csv_filename('credit')
-  debit_transactions_csv = input_csv_filename('debit')
+  credit_transactions_csv = input_csv_filename('Credit')
+  debit_transactions_csv = input_csv_filename('Debit')
 
   # Collect user input for date range
   month, year = input_month_and_year
@@ -34,8 +34,8 @@ end
 def input_csv_filename(type)
   filename = ""
   while filename.empty?
-    puts "Please enter the #{type} transactions CSV filename (E.g., #{type}_transactions.csv):"
-    input = gets.chomp.strip
+    puts "Please enter the #{type} transactions CSV filename (E.g., #{type.downcase}_transactions):"
+    input = gets.chomp.strip + ".csv"
     csv_path = File.join('csv_files', input)
     if File.exist?(csv_path)
       filename = csv_path
