@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "GPT Context",
+  "version": "1.0.0",
+  "description": "An extension to help Shopify employees gather context from Zendesk and filter sensitive information.",
+  "icons": {
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_icon": "icons/icon48.png",
+    "default_popup": "popup.html"
+  },
+  "permissions": ["clipboardWrite", "activeTab", "tabs"],
+  "host_permissions": ["https://*.zendesk.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["*://*.zendesk.com/*"],
+      "js": ["vendor/opal.js", "vendor/opal-parser.js", "opal_generated/content_script.js", "filter_data/name_lists.js"]
+    }
+  ]
+}

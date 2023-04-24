@@ -1,0 +1,7 @@
+window.COMMON_FIRST_NAMES = [
+    'James', 'John', 'Robert', 'Michael', 'William', 'David', 'Richard', 'Charles', 'Joseph', 'Thomas', 'Jon', 'Sandra', 'Ashley', 'Jessica', 'Amanda', 'Melissa', 'Stephanie', 'Laura', 'Sarah', 'Jennifer', 'Hannah', 'Alexis', 'Megan', 'Nicole', 'Samantha', 'Elizabeth', 'Rachel', 'Emma', 'Taylor', 'Lauren', 'Kayla', 'Anna', 'Victoria', 'Brittany', 'Sydney', 'Brianna', 'Morgan', 'Destiny', 'Kaitlyn', 'Katherine', 'Katelyn', 'Alexandra', 'Natalie', 'Abigail', 'Hailey', 'Savannah', 'Chloe', 'Allison', 'Jasmine', 'Mackenzie', 'Julia', 'Grace', 'Alyssa', 'Olivia', 'Amber', 'Maria', 'Haley', 'Katie', 'Brooke', 'Lily', 'Andrea', 'Paige', 'Michelle', 'Leah', 'Sara', 'Erin', 'Rebecca', 'Vanessa', 'Kimberly', 'Alicia', 'Courtney', 'Danielle', 'Jacqueline', 'Christina', 'Kathryn', 'Alexa', 'Gabrielle', 'Jenna', 'Tracy', 'Alexandria', 'Molly', 'Makayla', 'Ariana', 'Jade', 'Kelsey', 'Kylie', 'Tiffany', 'Megan', 'Jocelyn', 'Angelina', 'Mikayla', 'Maggie', 'Mia', 'Katelynn', 'Mallory', 'Katelyn', 'Kaitlin', 'Aubrey', 'Mckenzie', 'Caitlin', 'Mckenna', 'Cassandra', 'Makenzie', 'Makenzie', 'Kara',
+  ];
+  
+  window.COMMON_LAST_NAMES = [
+    'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Rodriguez', 'Wilson', 'Martinez', 'Anderson', 
+  ];
