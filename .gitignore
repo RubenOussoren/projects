@@ -17,5 +17,5 @@ Bank-Statement-CSV-Reader/Gemfile.lock
 Bank-Statement-CSV-Reader/splitwise_access_token.yml
 Bank-Statement-CSV-Reader/token.yaml
 
-# Other Projects to Ignore
-gpt_context/
+# gpt_context
+#gpt_context/
