@@ -65,7 +65,7 @@ class Filter
   # Filter out names from the given text.
   def self.filter_name(text)
     return nil if text.nil?
-    text.gsub(/\b[A-Z][a-z]*\s*[A-Z][a-z]*\b(?=[^a-zA-Z\d\s]|$)/, '[Name]')
+    text.gsub(/\b[A-Z][a-z]*\s*[A-Z][a-z]*\b(?=[^a-zA-Z\d\s]|$)/, '[redacted-n]')
   end
 
   # Filter out common names from the given text.
@@ -74,13 +74,13 @@ class Filter
     first_name_regex = Regexp.new(`window.COMMON_FIRST_NAMES`.join('|'), 'i')
     last_name_regex = Regexp.new(`window.COMMON_LAST_NAMES`.join('|'), 'i')
     name_regex = Regexp.union(first_name_regex, last_name_regex)
-    text.gsub(/\b#{name_regex}\b/i, '[Name]')
+    text.gsub(/\b#{name_regex}\b/i, '[redacted-cn]')
   end
 
   # Filter out email addresses from the given text.
   def self.filter_email(text)
     return nil if text.nil?
-    text.gsub(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z]{2,}\b/i, '[Email]')
+    text.gsub(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z]{2,}\b/i, '[redacted-e]')
   end
 
   # Filter out URLs from the given text.
@@ -94,7 +94,7 @@ class Filter
   
     ignored_url_regex = Regexp.union(ignored_url_patterns)
   
-    text.gsub(ignored_url_regex, '[Ignored URL]')
+    text.gsub(ignored_url_regex, '[redacted-u]')
   end
 
   # Apply all the filters to the given text.
