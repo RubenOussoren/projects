@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "GPT Context",
+  "name": "TMSP Context Gathering",
   "version": "1.0.0",
   "description": "An extension to help Shopify employees gather context from Zendesk and filter sensitive information.",
   "icons": {
@@ -16,7 +16,10 @@
   "content_scripts": [
     {
       "matches": ["*://*.zendesk.com/*"],
-      "js": ["vendor/opal.js", "vendor/opal-parser.js", "opal_generated/content_script.js", "filter_data/name_lists.js"]
+      "js": ["vendor/opal.js", "vendor/opal-parser.js", "opal_generated/content_script.js"]
     }
-  ]
+  ],
+  "background": {
+    "service_worker": "filter_data/preload_names.js"
+  }
 }
