@@ -33,7 +33,8 @@ class ContentScript
     notes = []
     omni_log_elements = `Array.from(document.querySelectorAll('[data-test-id="omni-log-message-content"]'))`
     omni_log_elements.each do |omni_log_element|
-      if `#{omni_log_element}.closest('article').querySelector('[data-test-id="omni-log-internal-note-tag"]')`
+      closest_article = `#{omni_log_element}.closest('article')`
+      if `#{closest_article}.querySelector('[data-test-id="omni-log-internal-note-tag"]')` || `#{closest_article}.querySelector('.sc-5rafq2-0.sc-7uf44v-0.kCZlHh')`
         note = ''
         content_elements = `Array.from(#{omni_log_element}.querySelectorAll(':scope > *'))`
         content_elements.each_with_index do |content_element, index|
@@ -52,7 +53,8 @@ class ContentScript
     notes = []
     omni_log_elements = `Array.from(document.querySelectorAll('[data-test-id="omni-log-message-content"]'))`
     omni_log_elements.each do |omni_log_element|
-      unless `#{omni_log_element}.closest('article').querySelector('[data-test-id="omni-log-internal-note-tag"]')`
+      closest_article = `#{omni_log_element}.closest('article')`
+      unless `#{closest_article}.querySelector('[data-test-id="omni-log-internal-note-tag"]')` || `#{closest_article}.querySelector('.sc-5rafq2-0.sc-7uf44v-0.kCZlHh')`
         note = ''
         content_elements = `Array.from(#{omni_log_element}.querySelectorAll(':scope > *'))`
         content_elements.each_with_index do |content_element, index|
