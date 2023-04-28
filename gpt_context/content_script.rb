@@ -23,7 +23,8 @@ class ContentScript
         text_content += "\n" if index < content_elements.length - 1
         note += text_content
       end
-      notes << filter_sensitive_information(note.strip)
+      filtered_note = filter_sensitive_information(note.strip)
+      notes << filtered_note unless filtered_note.empty?
     end
     notes
   end
