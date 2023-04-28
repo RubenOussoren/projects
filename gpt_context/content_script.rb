@@ -12,7 +12,7 @@ class ContentScript
   end
 
   # Extract context from elements with the `data-test-id="omni-log-message-content"` attribute.
-  def extract_context
+  def extract_all_context
     notes = []
     omni_log_elements = `Array.from(document.querySelectorAll('[data-test-id="omni-log-message-content"]'))`
     omni_log_elements.each do |omni_log_element|
@@ -29,6 +29,44 @@ class ContentScript
     notes
   end
 
+  def extract_internal_context
+    notes = []
+    omni_log_elements = `Array.from(document.querySelectorAll('[data-test-id="omni-log-message-content"]'))`
+    omni_log_elements.each do |omni_log_element|
+      if `#{omni_log_element}.closest('article').querySelector('[data-test-id="omni-log-internal-note-tag"]')`
+        note = ''
+        content_elements = `Array.from(#{omni_log_element}.querySelectorAll(':scope > *'))`
+        content_elements.each_with_index do |content_element, index|
+          text_content = `#{content_element}.innerText`.strip
+          text_content += "\n" if index < content_elements.length - 1
+          note += text_content
+        end
+        filtered_note = filter_sensitive_information(note.strip)
+        notes << filtered_note unless filtered_note.empty?
+      end
+    end
+    notes
+  end
+  
+  def extract_public_context
+    notes = []
+    omni_log_elements = `Array.from(document.querySelectorAll('[data-test-id="omni-log-message-content"]'))`
+    omni_log_elements.each do |omni_log_element|
+      unless `#{omni_log_element}.closest('article').querySelector('[data-test-id="omni-log-internal-note-tag"]')`
+        note = ''
+        content_elements = `Array.from(#{omni_log_element}.querySelectorAll(':scope > *'))`
+        content_elements.each_with_index do |content_element, index|
+          text_content = `#{content_element}.innerText`.strip
+          text_content += "\n" if index < content_elements.length - 1
+          note += text_content
+        end
+        filtered_note = filter_sensitive_information(note.strip)
+        notes << filtered_note unless filtered_note.empty?
+      end
+    end
+    notes
+  end
+
   # Apply filters to the extracted text to remove sensitive information.
   def filter_sensitive_information(text)
     return nil if text.nil?
@@ -39,23 +77,44 @@ class ContentScript
   def setup_message_listener
     %x{
       chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        if (request.action == 'gather_context') {
-          try {
-            var extracted_content = #{gather_context_and_copy_to_clipboard};
-            sendResponse({success: true, content: extracted_content});
-          } catch (error) {
-            console.error('Error in ContentScript:', error);
-            sendResponse({success: false});
+        var extracted_content;
+        try {
+          switch (request.action) {
+            case 'copy-all-context':
+              extracted_content = #{gather_context_and_copy_to_clipboard(:all)};
+              break;
+            case 'copy-internal-context':
+              extracted_content = #{gather_context_and_copy_to_clipboard(:internal)};
+              break;
+            case 'copy-public-context':
+              extracted_content = #{gather_context_and_copy_to_clipboard(:public)};
+              break;
+            default:
+              sendResponse({success: false});
+              return;
           }
-          return true;
+          sendResponse({success: true, content: extracted_content});
+        } catch (error) {
+          console.error('Error in ContentScript:', error);
+          sendResponse({success: false});
         }
+        return true;
       });
     }
   end
   
   # Gather context from the Zendesk page and send the extracted content as a response.
-  def gather_context_and_copy_to_clipboard
-    context = extract_context
+  def gather_context_and_copy_to_clipboard(context_type)
+    context = case context_type
+              when :all
+                extract_all_context
+              when :internal
+                extract_internal_context
+              when :public
+                extract_public_context
+              else
+                []
+              end
   
     extracted_context = "Context:\n"
     context.each_with_index do |note, index|
