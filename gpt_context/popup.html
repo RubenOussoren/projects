@@ -8,10 +8,13 @@
 <body>
     <div id="popup-content">
         <h2>TMSP Context Gathering</h2>
-        <p>Click the button to copy context from the current Zendesk ticket to your clipboard.</p>
-        <button id="copy-all-context">Copy All Context</button>
-        <button id="copy-internal-context">Copy Internal Context</button>
-        <button id="copy-public-context">Copy Public Context</button>
+        <p>Select a button to copy the desired context from the active Zendesk ticket to your clipboard.</p>
+        <div id="button-container">
+            <button id="copy-all-context">Copy All Context</button>
+            <button id="copy-internal-context">Copy Internal Context</button>
+            <button id="copy-public-context">Copy Public Context</button>
+        </div>
+        <p>Shortcut to <a href="https://gpt.shopify.io/" target="_blank">Shopify's ChatGPT</a></p>
     </div>
     <script src="popup_script.js"></script>
 </body>
