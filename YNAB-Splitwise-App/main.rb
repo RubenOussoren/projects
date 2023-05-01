@@ -274,13 +274,16 @@ def sync_transactions(splitwise_expenses, ynab_transactions, ynab_client, budget
       if ['active'].include?(mapping[splitwise_id]['status']) # Change to ['active', 'updated'] if you want to include the updated status to show in "Update_Required" transactions
         ynab_id = mapping[splitwise_id]['ynab_id']
         ynab_related_transaction = ynab_transactions.find { |t| t.id == ynab_id }
-        ynab_amount = (transaction.amount.to_f * 1000).round(0)
-        memo = "#{transaction.description} (Total: $#{transaction.total})"
-        updated = false
-        updated ||= ynab_related_transaction.amount != ynab_amount
-        updated ||= ynab_related_transaction.memo&.downcase&.strip != memo.downcase.strip
+        
+	if ynab_related_transaction
+	  ynab_amount = (transaction.amount.to_f * 1000).round(0)
+          memo = "#{transaction.description} (Total: $#{transaction.total})"
+          updated = false
+          updated ||= ynab_related_transaction.amount != ynab_amount
+          updated ||= ynab_related_transaction.memo&.downcase&.strip != memo.downcase.strip
 
-        update_required_transactions << transaction if updated
+          update_required_transactions << transaction if updated
+	end
       elsif mapping[splitwise_id]['status'] == 'deleted'
         if transaction.date <= Date.today
           missing_or_deleted_transactions << transaction
