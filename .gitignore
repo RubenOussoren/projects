@@ -18,4 +18,4 @@ Bank-Statement-CSV-Reader/splitwise_access_token.yml
 Bank-Statement-CSV-Reader/token.yaml
 
 # gpt_context
-#gpt_context/
+scraper_clutch/config.json

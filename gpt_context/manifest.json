@@ -12,7 +12,7 @@
     "default_popup": "popup.html"
   },
   "permissions": ["clipboardWrite", "activeTab", "tabs"],
-  "host_permissions": ["https://*.zendesk.com/*"],
+  "host_permissions": ["https://shopify.zendesk.com/agent/tickets/*"],
   "content_scripts": [
     {
       "matches": ["*://*.zendesk.com/*"],
