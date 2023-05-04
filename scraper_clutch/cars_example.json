@@ -1,0 +1,98 @@
+[
+    {
+        "title": "2016 Kia Soul LX",
+        "price": "$15,590",
+        "mileage": "103,322 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/e9745d26-dcdb-432e-b5e8-d220fbc4e493?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/17901"
+    },
+    {
+        "title": "2019 Nissan Micra SV",
+        "price": "$17,990",
+        "mileage": "73,439 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/07f607f4-6873-483f-8bec-4dd702bf8636?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/18084"
+    },
+    {
+        "title": "2016 Nissan Rogue S",
+        "price": "$17,890",
+        "mileage": "97,688 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/e0441e21-cb52-4688-ab2f-e82232e4ca18?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/17378"
+    },
+    {
+        "title": "2015 Hyundai Sonata 2.4L Sport Tech",
+        "price": "$17,990",
+        "mileage": "72,951 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/fdc1190b-425e-45fc-aa2b-fe098135129d?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/17736"
+    },
+    {
+        "title": "2017 Hyundai Accent L",
+        "price": "$17,990",
+        "mileage": "19,129 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/66594880-4765-4527-8fc4-7d2d79f77f64?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/18063"
+    },
+    {
+        "title": "2015 Hyundai Sonata 2.4L GL",
+        "price": "$14,990",
+        "mileage": "109,713 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/59373d7d-3317-4bc3-90e2-419b0ecf9689?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/17380"
+    },
+    {
+        "title": "2019 Nissan Micra SV",
+        "price": "71,527 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/2bef10af-12d7-4e31-8bdc-7f51b7ae376f?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/17509"
+    },
+    {
+        "title": "2017 Hyundai Sonata 2.4L GL",
+        "price": "93,605 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/fede593c-c63d-4413-a8ac-1beaf9586206?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/17527"
+    },
+    {
+        "title": "2019 Nissan Micra S",
+        "price": "$17,890",
+        "mileage": "45,955 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/db52f3af-a271-4036-bf68-e49056d72599?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/17958"
+    },
+    {
+        "title": "2018 Kia Forte LX+",
+        "price": "$17,990",
+        "mileage": "85,664 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/375714a5-f629-4cc6-b4f6-725954eb88ff?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/18213"
+    },
+    {
+        "title": "2015 Nissan Versa Note SV",
+        "price": "$12,990",
+        "mileage": "91,000 km",
+        "image_url": "/static/media/convertible.2ba9e17b.svg",
+        "car_url": "https://www.clutch.ca/vehicles/18101"
+    },
+    {
+        "title": "2015 Nissan Altima 2.5 SL",
+        "price": "$16,990",
+        "mileage": "88,136 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/1d8d1a92-3d95-4e69-846c-65c0e12648fc?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/17956"
+    },
+    {
+        "title": "2015 Kia Sportage LX",
+        "price": "$16,990",
+        "mileage": "98,587 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/18eccdd8-0844-4106-a843-c482d1102246?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/17709"
+    },
+    {
+        "title": "2015 Hyundai Sonata 2.4L GLS",
+        "price": "$15,290",
+        "mileage": "95,308 km",
+        "image_url": "https://images.clutch.ca/image/upload/f_auto/t_extra_small/v1/production/1705ac53-d2bc-414f-8f73-0ad75dbfe3dd?_a=ATRSRAA0",
+        "car_url": "https://www.clutch.ca/vehicles/17405"
+    }
+]
