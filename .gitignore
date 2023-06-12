@@ -17,5 +17,14 @@ Bank-Statement-CSV-Reader/Gemfile.lock
 Bank-Statement-CSV-Reader/splitwise_access_token.yml
 Bank-Statement-CSV-Reader/token.yaml
 
-# gpt_context
-#gpt_context/
+# Scraper
+scraper_clutch/config.json
+gpt_context/
+
+# Trading Tuben
+trading_tuben/investments.csv
+trading_tuben/available_funds.txt
+trading_tuben/bidirectional_trade.py
+trading_tuben/simple_trade.py
+trading_tuben/models/
+trading_tuben/results/

@@ -1,0 +1,9 @@
+{
+    "makes": ["kia","honda","hyundai","mazda","nissan","toyota"],
+    "min_year": 2015,
+    "max_mileage": 110000,
+    "max_price": 18000,
+    "sender_email": "example1@test.com",
+    "receiver_emails": ["example2@test.com", "example3@test.com"],
+    "password": "your_email_password"
+}
