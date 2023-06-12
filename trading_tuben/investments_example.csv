@@ -1,0 +1,4 @@
+ticker,buy_date,buy_price,shares,sell_date,sell_price
+ATZ.TO,2021-01-04,20.00,50,, 
+CM.TO,2021-01-11,100.00,10,2021-02-01,110.00
+SHOP.TO,2021-01-18,1000.00,5,, 

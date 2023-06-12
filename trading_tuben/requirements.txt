@@ -1,0 +1,10 @@
+pandas
+numpy
+matplotlib
+scikit-learn
+tensorflow
+alpha_vantage
+TA-Lib
+prettytable
+ratelimiter
+tenacity
