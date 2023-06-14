@@ -286,7 +286,7 @@ def display_results(ticker, last_prediction, last_actual_price, recommendation, 
     if not os.path.exists("results"):
         os.makedirs("results")
 
-    # Save the results as an HTML string
+    # Save results to the results file
     script_dir = os.path.dirname(os.path.abspath(__file__))
     results_file = os.path.join(script_dir, f"results/{ticker}.txt")
 
@@ -298,9 +298,9 @@ def display_results(ticker, last_prediction, last_actual_price, recommendation, 
         f.write("Technical Indicators\n")
         f.write(str(indicators_table) + "\n\n")
 
-    if total_investment is not None and total_value is not None and performance is not None:
-        f.write("Investment Performance\n")
-        f.write(str(performance_table) + "\n\n")
+        if total_investment is not None and total_value is not None and performance is not None:
+            f.write("Investment Performance\n")
+            f.write(str(performance_table) + "\n\n")
 
     # Save the results as an HTML string
     results = f"<h2>{time.strftime('%Y-%m-%d')}</h2>"
