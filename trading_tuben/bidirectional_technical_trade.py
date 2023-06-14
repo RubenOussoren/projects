@@ -164,7 +164,10 @@ def generate_recommendation(predictions, data, upper, middle, lower, slowk, slow
     return buy_votes, sell_votes, recommendation, bb_buy, bb_sell, so_buy, so_sell, ma_buy, ma_sell, rsi_buy, rsi_sell, adx_trend, obv_buy, obv_sell, macd_buy, macd_sell, fib_buy, fib_sell, lstm_buy, lstm_sell
     
 def calculate_investment_performance(ticker):
-    investments = pd.read_csv("investments.csv")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    investments_file = os.path.join(script_dir, "investments.csv")
+    
+    investments = pd.read_csv(investments_file)
     ticker_investments = investments[investments['ticker'] == ticker]
 
     if ticker_investments.empty:
@@ -193,6 +196,14 @@ def calculate_investment_performance(ticker):
 
 def get_available_funds():
     with open("available_funds.txt", "r") as f:
+        available_funds = float(f.read().strip())
+    return available_funds
+
+def get_available_funds():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(script_dir, "available_funds.txt")
+    
+    with open(file_path, "r") as f:
         available_funds = float(f.read().strip())
     return available_funds
 
@@ -275,8 +286,11 @@ def display_results(ticker, last_prediction, last_actual_price, recommendation, 
     if not os.path.exists("results"):
         os.makedirs("results")
 
-    # Save results to the results file
-    with open(f"results/{ticker}.txt", "a+") as f:
+    # Save the results as an HTML string
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    results_file = os.path.join(script_dir, f"results/{ticker}.txt")
+
+    with open(results_file, "a+") as f:
         f.write("-" * 80 + "\n")  # Add a separator line
         f.write(f"{time.strftime('%Y-%m-%d')}\n")
         f.write("Overall Recommendation\n")
@@ -351,7 +365,9 @@ def train_and_predict(ticker):
         return
 
     # Save model
-    model.save(f"models/{ticker}.keras")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(script_dir, f"models/{ticker}.keras")
+    model.save(model_path)
     
     # Make predictions
     predictions = model.predict(X_test)
