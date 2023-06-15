@@ -35,3 +35,26 @@ The script also allows you to track your investments and their performance. You 
 4. Run the script to get stock price predictions, trading recommendations, and investment performance.
 
 Please note that investing in stocks, ETFs, and cryptocurrencies carries inherent risks, and past performance does not guarantee future results. Perform your own due diligence and consult with a financial advisor if necessary before making any investment decisions.
+
+## Stocks/ETFs:
+
+1. TSX:RY (Royal Bank of Canada)
+2. TSX:TD (Toronto-Dominion Bank)
+3. TSX:BNS (Bank of Nova Scotia)
+4. TSX:ENB (Enbridge Inc.)
+5. TSX:SU (Suncor Energy Inc.)
+6. TSX:BCE (BCE Inc.)
+7. TSX:T (Telus Corporation)
+8. TSX:SHOP (Shopify Inc.)
+9. TSX:CSU (Constellation Software Inc.)
+10. TSX:OTEX (Open Text Corporation)
+11. TSX:KXS (Kinaxis Inc.)
+12. TSX:CNR (Canadian National Railway Company)
+13. TSX:WCN (Waste Connections Inc.)
+14. TSX:XIU (iShares S&P/TSX 60 Index ETF)
+15. TSX:ZCN (BMO S&P/TSX Capped Composite Index ETF)
+16. TSX:XAW (iShares Core MSCI All Country World ex Canada Index ETF)
+17. TSX:HXU (Horizons S&P/TSX 60™ Index ETF 2x Daily Bull)
+18. TSX:HXD (Horizons S&P/TSX 60™ Index ETF 2x Daily Bear)
+19. TSX:XGD (iShares S&P/TSX Global Gold Index ETF)
+20. TSX:CP ()

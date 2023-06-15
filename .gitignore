@@ -28,3 +28,4 @@ trading_tuben/bidirectional_trade.py
 trading_tuben/simple_trade.py
 trading_tuben/models/
 trading_tuben/results/
+trading_tuben/cron_job.log

@@ -1,4 +1,6 @@
 import os
+# Ignore TensorFlow warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import time
 import numpy as np
 import talib
@@ -17,12 +19,15 @@ from keras.callbacks import EarlyStopping
 from prettytable import PrettyTable
 from tenacity import before_sleep_log, after_log
 
-
 # Set your Alpha Vantage API key
 api_key = 'YG0UB6KP63MT95A6'
 
 # List of stock tickers
-tickers = ['HXU.TO', 'HXD.TO', 'BNS.TO', 'ENB.TO', 'XGD.TO']
+tickers = [
+    'TSX:RY', 'TSX:TD', 'TSX:BNS', 'TSX:ENB', 'TSX:SU', 'TSX:BCE', 'TSX:T',
+    'TSX:SHOP', 'TSX:CSU', 'TSX:OTEX', 'TSX:KXS', 'TSX:CNR', 'TSX:WCN',
+    'TSX:XIU', 'TSX:ZCN', 'TSX:XAW', 'TSX:HXU', 'TSX:HXD', 'TSX:XGD', 'TSX:CP'
+]
 
 # Set the rate limit for the fetch_stock_data function
 logging.basicConfig(level=logging.INFO)
@@ -193,11 +198,6 @@ def calculate_investment_performance(ticker):
 
     performance = (total_value - total_investment) / total_investment * 100
     return total_investment, total_value, performance
-
-def get_available_funds():
-    with open("available_funds.txt", "r") as f:
-        available_funds = float(f.read().strip())
-    return available_funds
 
 def get_available_funds():
     script_dir = os.path.dirname(os.path.abspath(__file__))
