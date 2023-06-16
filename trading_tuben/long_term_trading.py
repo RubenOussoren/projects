@@ -217,7 +217,7 @@ def generate_recommendation(predictions, data, upper, middle, lower, slowk, slow
     
 def calculate_investment_performance(ticker):
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    investments_file = os.path.join(script_dir, "investment_long_term.csv")
+    investments_file = os.path.join(script_dir, "investments_long_term.csv")
     
     investments = pd.read_csv(investments_file)
     ticker_investments = investments[investments['ticker'] == ticker]
@@ -527,7 +527,7 @@ def train_and_predict_wrapper(ticker):
         all_results += "\n" + "=" * 80 + "\n"  # Add a separator between tickers
 
     # Send results via email
-    subject = f"Trading Recommendations - {time.strftime('%Y-%m-%d')}"
+    subject = f"Long Term Trading Recommendations - {time.strftime('%Y-%m-%d')}"
     send_email(subject, all_results)
 
 if __name__ == '__main__':
