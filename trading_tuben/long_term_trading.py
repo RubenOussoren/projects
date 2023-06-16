@@ -217,7 +217,7 @@ def generate_recommendation(predictions, data, upper, middle, lower, slowk, slow
     
 def calculate_investment_performance(ticker):
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    investments_file = os.path.join(script_dir, "investments.csv")
+    investments_file = os.path.join(script_dir, "investment_long_term.csv")
     
     investments = pd.read_csv(investments_file)
     ticker_investments = investments[investments['ticker'] == ticker]
@@ -255,7 +255,7 @@ def calculate_investment_performance(ticker):
 
 def get_available_funds():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(script_dir, "available_funds.txt")
+    file_path = os.path.join(script_dir, "available_funds_long_term.txt")
     
     with open(file_path, "r") as f:
         available_funds = float(f.read().strip())

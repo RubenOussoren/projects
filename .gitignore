@@ -23,7 +23,9 @@ gpt_context/
 
 # Trading Tuben
 trading_tuben/investments.csv
+trading_tuben/investments_long_term.csv
 trading_tuben/available_funds.txt
+trading_tuben/available_funds_long_term.txt
 trading_tuben/bidirectional_trade.py
 trading_tuben/simple_trade.py
 trading_tuben/models/
